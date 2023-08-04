@@ -21,7 +21,7 @@ AVG_MODEL_SIZE_MB = 91
 def main():
     opts = parser_args()
     metas = find_models_metadata(opts.json_dir)
-    if opts.cmd == 'backends':
+    if opts.cmd == 'list-backends':
         list_backends(metas)
     elif opts.cmd == 'list-models':
         list_models(metas, opts.backend)
@@ -53,7 +53,7 @@ def parser_args() -> argparse.Namespace:
                              'running on windows, else you have to specify it yourself.')
 
     commands = parser.add_subparsers(dest='cmd', title='commands', metavar='')
-    commands.add_parser('backends', help='Lists the available backends that VAI supports')
+    commands.add_parser('list-backends', help='Lists the available backends that VAI supports')
 
     mlist = commands.add_parser('list-models', help='Lists available models for a given backend')
     mlist.add_argument('--backend', metavar='name', default=backend, required=not backend,
