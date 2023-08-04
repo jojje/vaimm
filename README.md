@@ -20,14 +20,14 @@ VAI Models Manager (<version>): Download missing models for TopazLabs Video AI
 
 options:
   -h, --help       show this help message and exit
-  --json-dir path  Directory where the VAI model json files reside. E.g. alq-13.json.
-                   Defaults to the value of the environment variable TVAI_MODEL_DIR if
-                   set, else the windows default if running on windows, else you have to
-                   specify it yourself. (default: C:\ProgramData\Topaz Labs LLC\Topaz
-                   Video AI\models)
+  --json-dir path  Directory where the VAI model json files reside. E.g.
+                   alq-13.json. Defaults to the value of the environment variable
+                   TVAI_MODEL_DIR if set, else checks if any of the default folders
+                   exist, otherwise you just have to specify it yourself. (default:
+                   C:\ProgramData\Topaz Labs LLC\Topaz Video AI\models)
 
 commands:
-    backends       Lists the available backends that VAI supports
+    list-backends  Lists the available backends that VAI supports
     list-models    Lists available models for a given backend
     list-files     Lists model files for a backend
     download       Download VAI models missing from your model data directory
@@ -36,14 +36,14 @@ commands:
 Each command takes options and arguments. List which ones are available,
 optional and required by providing `--help` after the command name. 
 
-Example: `vaimm backends --help`
+Example: `vaimm list-backends --help`
 
 To use any of the commands, you have to specify where the VAI model JSON files
 are. For windows users, the default (shown above) should be the correct location
 for most folks. For Mac and Linux users, you'll have to specify the path
 explicitly.
 
-Example: `vaimm --json-dir /opt/TopazVideoAIBETA/models backends`
+Example: `vaimm --json-dir /opt/TopazVideoAIBETA/models list-backends`
 
 The list commands are there to give you some information about the models and
 versions available, and what model files are required for each. If you are only
@@ -54,7 +54,7 @@ For example, to only show the latest version of the model files for Artemis Medi
 Prometheus, applicable to the ONNX (32-bit) backend:
 
 ```
-$ vaimm list-files onnx --include prob-3,amq-13
+$ vaimm list-files --backend onnx --include prob-3,amq-13
 
 amq-v13-fgnet-fp32-256x352-1x-ox.tz
 amq-v13-fgnet-fp32-256x352-2x-ox.tz
@@ -86,7 +86,7 @@ Let's say you want to download the same two model files ("onnx networks") listed
 above, for a RTX 3080 card which uses 16-bit floating point.
 
 ```
-$ vaimm download onnx16 --include prob-3,amq-13 --dir . --cookie "$COOKIE"
+$ vaimm download --backend onnx16 --include prob-3,amq-13 --dir . --cookie "$COOKIE"
 
 Downloading: 100%|████████████████| 54/54 [00:26<00:00,  2.07 files /s, speed=64.04 MiB/s]
 Download completed successfully with 1.63 GiB of data fetched.
@@ -101,25 +101,26 @@ Download completed successfully with 1.63 GiB of data fetched.
   value is in the help description for the command. See below.
 
 ```
-usage: vaimm download [-h] [--backend name] [--include ids] -d path -c str [-t n]
+usage: vaimm download [-h] --backend name [--include ids] -d path -c str [-t n]
 
 options:
   -h, --help            show this help message and exit
-  --backend name        Name of the backend to fetch models for (env: TVAI_BACKEND
-                        (default: onnx)
-  --include ids         Commma separated list of specific model(s) to include (default:
-                        None)
-  -d path, --dir path   Path to your model data directory. Defaults to env-var
-                        TVAI_MODEL_DATA_DIR if set. (default: None)
-  -c str, --cookie str  The value of the cf_clearance cookie, required to download files
-                        from topaz Cloudflare CDN. You can find this when logged into
-                        the topaz website, by opening "developer tools" in firefox (or
-                        inspector in chrome), then the network tab. Once that is done,
-                        download a test model from the browser. E.g: https://veai-
-                        models.topazlabs.com/prap-v3-fp32-ov.tz . Finally look at the
-                        request headers for the associated request, and the Cookie
-                        header. That header has the value required. It looks like
-                        "cf_clearance: <the-string-you-need-here>". (default: None)
+  --backend name        Name of the backend to fetch models for (env: TVAI_BACKEND)
+                        (default: None)
+  --include ids         Commma separated list of specific model(s) to include
+                        (default: None)
+  -d path, --dir path   Path to your model data directory (env:
+                        TVAI_MODEL_DATA_DIR). (default: None)
+  -c str, --cookie str  The value of the cf_clearance cookie, required to download
+                        files from topaz Cloudflare CDN. You can find this when
+                        logged into the topaz website, by opening "developer tools"
+                        in firefox (or inspector in chrome), then the network tab.
+                        Once that is done, download a test model from the browser.
+                        E.g: https://veai-models.topazlabs.com/prap-v3-fp32-ov.tz .
+                        Finally look at the request headers for the associated
+                        request, and the Cookie header. That header has the value
+                        required. It looks like "cf_clearance: <the-string-you-need-
+                        here>" (env: TVAI_COOKIE). (default: None)
   -t n, --threads n     Number of concurrent downloads to use (default: 4)
 ```
 
