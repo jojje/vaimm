@@ -78,7 +78,7 @@ def parser_args() -> argparse.Namespace:
                                'headers for the associated request, and the Cookie header. That header has the value '
                                'required. It looks like "cf_clearance: <the-string-you-need-here>" '
                                f'(env: {ENV_COOKIE}).')
-    download.add_argument('-t', '--threads', metavar='n', default=4, type=int,
+    download.add_argument('-t', '--threads', metavar='n', default=1, type=int,
                           help='Number of concurrent downloads to use')
 
     if len(sys.argv) < 2:

@@ -121,7 +121,7 @@ options:
                         request, and the Cookie header. That header has the value
                         required. It looks like "cf_clearance: <the-string-you-need-
                         here>" (env: TVAI_COOKIE). (default: None)
-  -t n, --threads n     Number of concurrent downloads to use (default: 4)
+  -t n, --threads n     Number of concurrent downloads to use (default: 1)
 ```
 
 One note on the `--include` option. It says default is None. What that _really_
