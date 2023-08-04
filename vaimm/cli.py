@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import os
-import platform
 import sys
 
 from textwrap import fill, indent
@@ -49,7 +48,7 @@ def parser_args() -> argparse.Namespace:
     parser.add_argument('--json-dir', metavar='path', default=json_dir, required=not json_dir,
                         help='Directory where the VAI model json files reside. E.g. alq-13.json. Defaults to the '
                              f'value of the environment variable {ENV_JSON_DIR} if set, else checks if any of the '
-                              'default folders exist, otherwise you just have to specify it yourself.')
+                             'default folders exist, otherwise you just have to specify it yourself.')
 
     commands = parser.add_subparsers(dest='cmd', title='commands', metavar='')
     commands.add_parser('list-backends', help='Lists the available backends that VAI supports')
