@@ -39,9 +39,10 @@ optional and required by providing `--help` after the command name.
 Example: `vaimm list-backends --help`
 
 To use any of the commands, you have to specify where the VAI model JSON files
-are. For windows users, the default (shown above) should be the correct location
-for most folks. For Mac and Linux users, you'll have to specify the path
-explicitly.
+are. The program will check the default locations for windows, macos and linux,
+and show what it deduced to be the location dynamically in the help message If
+you're not using a standard location, you'll be required to specify the location
+yourself.
 
 Example: `vaimm --json-dir /opt/TopazVideoAIBETA/models list-backends`
 
@@ -64,6 +65,10 @@ prob-v3-fgnet-fp32-576x672-4x-ox.tz
 
 Estimated total size: 4.80 GiB
 ```
+
+_Tip: You can use the list-files command to previous what will be downloaded,
+since it's the exact same set of files that will be when using the `download`
+command with the same `include` filter and `backend`._
 
 In order to download the right models for your particular machine, you have to
 know which VAI backend you are using, and tell the program to use models for
@@ -175,7 +180,7 @@ completely and successfully downloaded.
 
 Files in-flight (being downloaded) are written to a temporary file in the
 directory you specified with the `--dir` option. They have the suffix
-`.download` appended to them. Once a file has been fully downloaded, and its
+`.incomplete` appended to them. Once a file has been fully downloaded, and its
 size matches that which the CDN server announced should be the expected size,
 the temporary file is renamed to the actual model filename. I.e. the download
 suffix is stripped.
@@ -230,8 +235,9 @@ Pull requests are extremely welcome. But defining the problem comes first. So
 start with an Issue ticket.
 
 I likely won't maintain this actively once I've downloaded the models that _I_
-need, so keeping track on if TopazLabs breaks this program through changes on
-their backend will be a joint user responsibility.
+need, so keeping track of if TopazLabs breaks this program through changes on
+their backend or the json model files format provided by the VAI application
+will be a joint user responsibility.
 
 if TopazLabs changes anything that should be catered for, please open an
 issue so we can discuss that first. Then once the problem has been defined, open
