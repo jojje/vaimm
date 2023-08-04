@@ -1,0 +1,23 @@
+
+# Temporary and binary files
+__pycache__/*
+.*.swp
+
+# Project files
+.idea
+.vscode
+
+# Package files
+*.egg
+*.eggs/
+.installed.cfg
+*.egg-info
+
+# Build and docs folder/files
+build/*
+dist/*
+sdist/*
+
+# Per-project virtualenvs
+.venv*/
+_version.py 

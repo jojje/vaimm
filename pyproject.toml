@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vaimm"
+authors = [
+    {name = "jojje", email = "tinjon+pypi@gmail.com"},
+]
+description = "Quickly download models for Topaz Video AI"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.7"
+keywords = ["vai", "video", "ai", "models"]
+license = {text = "GPLv2"}
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Development Status :: 4 - Beta",
+]
+dependencies = [
+    "tqdm",
+]
+dynamic = ["version"]
+
+[project.scripts]
+vaimm = "vaimm.cli:main"
+
+[tool.setuptools_scm]
+write_to = "vaimm/_version.py"
