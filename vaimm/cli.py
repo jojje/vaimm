@@ -35,8 +35,7 @@ def main():
 
 
 def parser_args() -> argparse.Namespace:
-    win = platform.system() == 'Windows'
-    json_dir = os.getenv(ENV_JSON_DIR, WINDOWS_DEFAULT_JSON_DIR if win else None)
+    json_dir = find_models_json_dir()
     model_dir = os.getenv(ENV_MODEL_DIR)
     backend = os.getenv(ENV_BACKEND)
     cookie = os.getenv(ENV_COOKIE)
@@ -49,8 +48,8 @@ def parser_args() -> argparse.Namespace:
     )
     parser.add_argument('--json-dir', metavar='path', default=json_dir, required=not json_dir,
                         help='Directory where the VAI model json files reside. E.g. alq-13.json. Defaults to the '
-                             f'value of the environment variable {ENV_JSON_DIR} if set, else the windows default if '
-                             'running on windows, else you have to specify it yourself.')
+                             f'value of the environment variable {ENV_JSON_DIR} if set, else checks if any of the '
+                              'default folders exist, otherwise you just have to specify it yourself.')
 
     commands = parser.add_subparsers(dest='cmd', title='commands', metavar='')
     commands.add_parser('list-backends', help='Lists the available backends that VAI supports')
@@ -122,3 +121,15 @@ def find_missing_files(model_dicts:Iterable[dict], backend:str, includes:str, da
     target_files = (os.path.join(data_dir, file) for file in backend_files)
     missing_files = (file for file in target_files if not os.path.exists(file))
     return missing_files
+
+
+def find_models_json_dir() -> str:
+    candidates = [
+        os.getenv('ENV_JSON_DIR', ''),
+        os.path.join(os.getenv('PROGRAMDATA', ''), 'Topaz Labs LLC\\Topaz Video AI\\models'),
+        '/Applications/Topaz Video AI.app/Contents/Resources/models',
+        '/opt/TopazVideoAIBETA/models',
+    ]
+    for path in candidates:
+        if path and os.path.exists(f'{path}/alq-13.json'):
+            return path
