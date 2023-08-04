@@ -70,7 +70,7 @@ def parser_args() -> argparse.Namespace:
                           help=f'Name of the backend to fetch models for (env: {ENV_BACKEND})')
     download.add_argument('--include', metavar='ids', help='Commma separated list of specific model(s) to include')
     download.add_argument('-d', '--dir', metavar='path', default=model_dir, required=not model_dir,
-                          help='Path to your model data directory. Defaults to env-var TVAI_MODEL_DATA_DIR if set.')
+                          help=f'Path to your model data directory (env: {ENV_MODEL_DIR}).')
     download.add_argument('-c', '--cookie', metavar='str', default=cookie, required=not cookie,
                           help='The value of the cf_clearance cookie, required to download files from topaz '
                                'Cloudflare CDN. You can find this when logged into the topaz website, by opening '
@@ -78,7 +78,8 @@ def parser_args() -> argparse.Namespace:
                                'that is done, download a test model from the browser. E.g: '
                                'https://veai-models.topazlabs.com/prap-v3-fp32-ov.tz . Finally look at the request '
                                'headers for the associated request, and the Cookie header. That header has the value '
-                               'required. It looks like "cf_clearance: <the-string-you-need-here>".')
+                               'required. It looks like "cf_clearance: <the-string-you-need-here>" '
+                               f'(env: {ENV_COOKIE}).')
     download.add_argument('-t', '--threads', metavar='n', default=4, type=int,
                           help='Number of concurrent downloads to use')
 
