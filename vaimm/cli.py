@@ -8,6 +8,7 @@ from typing import Iterable
 
 from .net import download_model_files
 from .vai import find_backend_files, find_models_metadata, parse_models_metadata
+from .tensorrt import find_graphics_card_family, find_tensorrt_engine, TRT, GPU_TRT_MAP
 from .version import __version__
 
 WINDOWS_DEFAULT_JSON_DIR = "C:\\ProgramData\\Topaz Labs LLC\\Topaz Video AI\\models"
@@ -15,19 +16,24 @@ ENV_JSON_DIR = 'TVAI_MODEL_DIR'
 ENV_MODEL_DIR = 'TVAI_MODEL_DATA_DIR'
 ENV_BACKEND = 'TVAI_BACKEND'
 ENV_COOKIE = 'TVAI_COOKIE'
+ENV_GPU_FAMILY = 'TVAI_GPU_FAMILY'
 AVG_MODEL_SIZE_MB = 91
 
 def main():
     opts = parser_args()
     metas = find_models_metadata(opts.json_dir)
+
     if opts.cmd == 'list-backends':
         list_backends(metas)
     elif opts.cmd == 'list-models':
-        list_models(metas, opts.backend)
+        trt = find_tensorrt_engine(opts.gpu)
+        list_models(metas, opts.backend, trt)
     elif opts.cmd == 'list-files':
-        list_backend_files(metas, opts.backend, opts.include)
+        trt = find_tensorrt_engine(opts.gpu)
+        list_backend_files(metas, opts.backend, opts.include, trt)
     elif opts.cmd == 'download':
-        download_missing_files(metas, opts.backend, opts.include, opts.dir, opts.threads, opts.cookie)
+        trt = find_tensorrt_engine(opts.gpu)
+        download_missing_files(metas, opts.backend, opts.include, opts.dir, opts.threads, opts.cookie, trt)
     else:
         print(f'command {opts.cmd} not implemented (this is a bug)', file=sys.stderr)
         sys.exit(-1)
@@ -39,7 +45,17 @@ def parser_args() -> argparse.Namespace:
     backend = os.getenv(ENV_BACKEND)
     cookie = os.getenv(ENV_COOKIE)
 
+    gpu_family = os.getenv(ENV_GPU_FAMILY) or find_graphics_card_family()
+    if gpu_family not in GPU_TRT_MAP:
+        gpu_family = None
+
     helper = argparse.ArgumentDefaultsHelpFormatter
+
+    def add_trt_options(p):
+        family_list = ", ".join(sorted(GPU_TRT_MAP.keys()))
+        p.add_argument('--gpu', metavar='family', default=gpu_family, choices=GPU_TRT_MAP.keys(),
+                       help=f'Name of the nVidia GPU family for TensorRT model fetching. '
+                            f'One of: {family_list}. (env: {ENV_GPU_FAMILY})')
 
     parser = argparse.ArgumentParser(
         formatter_class=helper,
@@ -53,20 +69,24 @@ def parser_args() -> argparse.Namespace:
     commands = parser.add_subparsers(dest='cmd', title='commands', metavar='')
     commands.add_parser('list-backends', help='Lists the available backends that VAI supports')
 
-    mlist = commands.add_parser('list-models', help='Lists available models for a given backend')
+    mlist = commands.add_parser('list-models', help='Lists available models for a given backend',
+                                formatter_class=helper)
     mlist.add_argument('--backend', metavar='name', default=backend, required=not backend,
                        help=f'Name of the backend to list models for (env: {ENV_BACKEND})')
+    add_trt_options(mlist)
 
-    files = commands.add_parser('list-files', help='Lists model files for a backend')
+    files = commands.add_parser('list-files', help='Lists model files for a backend', formatter_class=helper)
     files.add_argument('--backend', metavar='name', default=backend, required=not backend,
                        help=f'Name of the backend to list the model files for (env: {ENV_BACKEND})')
     files.add_argument('--include', metavar='ids', help='Commma separated list of specific model(s) to include')
+    add_trt_options(files)
 
     download = commands.add_parser('download', formatter_class=helper,
                                    help='Download VAI models missing from your model data directory')
     download.add_argument('--backend', metavar='name', default=backend, required=not backend,
                           help=f'Name of the backend to fetch models for (env: {ENV_BACKEND})')
     download.add_argument('--include', metavar='ids', help='Commma separated list of specific model(s) to include')
+    add_trt_options(download)
     download.add_argument('-d', '--dir', metavar='path', default=model_dir, required=not model_dir,
                           help=f'Path to your model data directory (env: {ENV_MODEL_DIR}).')
     download.add_argument('-c', '--cookie', metavar='str', default=cookie, required=not cookie,
@@ -91,8 +111,8 @@ def list_backends(model_dicts:Iterable[dict]):
     print('Supported backends:', ', '.join(backends))
 
 
-def list_models(model_dicts:Iterable[dict], backend:str):
-    parsed = parse_models_metadata(model_dicts, backend)
+def list_models(model_dicts:Iterable[dict], backend:str, trt:TRT):
+    parsed = parse_models_metadata(model_dicts, backend, trt)
     models = sorted(parsed, key=lambda m: m.id + str(m.version))
 
     print('Available models:')
@@ -102,21 +122,21 @@ def list_models(model_dicts:Iterable[dict], backend:str):
         print(f"\n* {id:<8s} {m.name}\n{desc}")
 
 
-def list_backend_files(model_dicts:Iterable[dict], backend:str, includes:str):
-    files = sorted(find_backend_files(model_dicts, backend, includes))
+def list_backend_files(model_dicts:Iterable[dict], backend:str, includes:str, trt:TRT):
+    files = sorted(find_backend_files(model_dicts, backend, includes, trt))
     print('Model files:\n', file=sys.stderr)
     print('\n'.join(files))
     print(f'\nEstimated total size: {len(files) * AVG_MODEL_SIZE_MB/(1<<10):.2f} GiB', file=sys.stderr)
 
 
 def download_missing_files(model_dicts:Iterable[dict], backend:str, includes:str,
-                           data_dir:str, threads:int, cookie:str):
-    missing_files = find_missing_files(model_dicts, backend, includes, data_dir)
+                           data_dir:str, threads:int, cookie:str, trt:TRT):
+    missing_files = find_missing_files(model_dicts, backend, includes, data_dir, trt)
     download_model_files(missing_files, threads, cookie)
 
 
-def find_missing_files(model_dicts:Iterable[dict], backend:str, includes:str, data_dir:str):
-    backend_files = find_backend_files(model_dicts, backend, includes)
+def find_missing_files(model_dicts:Iterable[dict], backend:str, includes:str, data_dir:str, trt:TRT):
+    backend_files = find_backend_files(model_dicts, backend, includes, trt)
     target_files = (os.path.join(data_dir, file) for file in backend_files)
     missing_files = (file for file in target_files if not os.path.exists(file))
     return missing_files

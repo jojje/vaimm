@@ -97,6 +97,15 @@ Downloading: 100%|████████████████| 54/54 [00:26
 Download completed successfully with 1.63 GiB of data fetched.
 ```
 
+To instead download _TensorRT_ optimized variants for a RTX 30xx series card:
+
+```
+$ vaimm download --backend tensorrt --gpu RTX30 --include prob-3,amq-13 --dir . --cookie "$COOKIE"
+
+Downloading: 100%|████████████████| 54/54 [00:26<00:00,  2.07 files /s, speed=64.04 MiB/s]
+Download completed successfully with 1.63 GiB of data fetched.
+```
+
 * `--dir` is the directory the files should be saved to. You'd likely want to
   specify the `TVAI_MODEL_DATA_DIR` directory. I.e. where you already have some
   model files that VAI downloaded on-the-fly as you used that program.
@@ -106,13 +115,16 @@ Download completed successfully with 1.63 GiB of data fetched.
   value is in the help description for the command. See below.
 
 ```
-usage: vaimm download [-h] --backend name [--include ids] -d path -c str [-t n]
+usage: vaimm download [options]
 
 options:
   -h, --help            show this help message and exit
   --backend name        Name of the backend to fetch models for (env: TVAI_BACKEND)
                         (default: None)
   --include ids         Commma separated list of specific model(s) to include
+                        (default: None)
+  --gpu family          Name of the nVidia GPU family for TensorRT model fetching. 
+                        One of: RTX20, RTX30, RTX40. (env: TVAI_GPU_FAMILY)
                         (default: None)
   -d path, --dir path   Path to your model data directory (env:
                         TVAI_MODEL_DATA_DIR). (default: None)
@@ -129,10 +141,27 @@ options:
   -t n, --threads n     Number of concurrent downloads to use (default: 1)
 ```
 
-One note on the `--include` option. It says default is None. What that _really_
+Option details worth clarifying:
+
+* The `--include` option. It says default is None. What that _really_
 means is that there is no filtering for specific model IDs done by default. So
 _all_ models for the backend will be downloaded if you don't limit the scope to
 just a few chosen, as was been done in the examples up until now.
+* `--gpu` option. This is only relevant if you want to download TensorRT optimized models. On Windows auto-detection of your GPU will be attempted, so the correct card family may already be filled in. Otherwise you have to explicitly specify for which RTX graphics card family you want to download TensorRT models for.
+
+## TensorRT
+
+TopazLabs provides a set of TensorRT models to speed up inference (video processing), but only for a subset of video cards and platforms.
+
+Specifically, only nVidia cards are supported, and of those cards, only the RTX 20, 30 and 40 series/families of cards. Further more, TensorRT models are only provided for Windows and Linux operating systems.
+
+When listing or downloading TensorRT models, the script will only show or download models that are available for your specified graphics card family, **and** that are available for the operating system you run the script on. 
+
+On Windows, attempts are made to auto-detect the right configuration. On Linux, or if you want to download TensorRT models for a specific RTX card family that isn't installed on the machine, you then need to specify the card family using the `--gpu` option.
+
+The card family that has been auto-detected is shown as `default: <family>` in the download and list-models command help text, so you can see there what type of TensorRT models will be downloaded or listed.
+
+Finally, to make things simple. The `--gpu` option only matters if you specify the `tensorrt` backend for model listing or downloading. It has no bearing on any other backends.
 
 ## Environment variables
 
@@ -147,10 +176,11 @@ be specified.
 The usage help lists which environment variable provides default for which
 option, but here is a digest:
 
-* `TVAI_MODEL_DIR`: the global `--json_dir`.
-* `TVAI_MODEL_DATA_DIR`: the download `--dir`.
-* `TVAI_COOKIE`: the download `--cookie`
-* `TVAI_BACKEND`: the `--backend` used by several commands.
+* `TVAI_MODEL_DIR`: the global `--json_dir` option.
+* `TVAI_MODEL_DATA_DIR`: the download `--dir` option.
+* `TVAI_COOKIE`: the download `--cookie` option.
+* `TVAI_BACKEND`: the `--backend` option used by several commands.
+* `TVAI_GPU_FAMILY`: the `--gpu` option used by several commands.
 
 ## FAQ
 
