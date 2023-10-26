@@ -147,6 +147,9 @@ def download_file(url:str, cookie:str, filename:str, chunk_size:int=8<<10) -> in
             raise ContentTooShortError(
                 f'Incomplete data from server - expected: {expected_bytes}, got: {bytes_written} for url: {url}', None)
 
+    # ensure output (download) directory exists
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
     # ensure user doesn't end up with broken models in case something goes wrong / program is aborted mid-stride
     os.rename(tempfile, filename)
     return bytes_written
