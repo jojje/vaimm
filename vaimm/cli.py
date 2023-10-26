@@ -59,7 +59,7 @@ def parser_args() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(
         formatter_class=helper,
-        description=f'VAI Models Manager (v{__version__}): Download missing models for TopazLabs Video AI'
+        description=f'VAI Models Manager (v{__version__}) - Download missing models for TopazLabs Video AI'
     )
     parser.add_argument('--json-dir', metavar='path', default=json_dir, required=not json_dir,
                         help='Directory where the VAI model json files reside. E.g. alq-13.json. Defaults to the '
